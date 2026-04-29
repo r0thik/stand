@@ -62,9 +62,12 @@ bind-interfaces
 <img width="448" height="409" alt="{EF67F7F5-FF28-4F8B-9908-7B184FEB76E6}" src="https://github.com/user-attachments/assets/f04c97b3-5702-43f5-85af-8352ee7a187c" />
 
 
-## Переключение Windows-клиентов в их сети
+## Переключение Windows в их сети
 Проверка Windows Server
 <img width="571" height="764" alt="{F3A75DD8-6220-4256-A423-7AEB0E30AD6B}" src="https://github.com/user-attachments/assets/4495625d-fef2-4a34-92ec-0c2bdf07d1af" />
 Проверка Windows Dekstop
 <img width="612" height="736" alt="{7CBD1476-38B4-4A20-9510-6839C041808F}" src="https://github.com/user-attachments/assets/dcb84acf-d18b-4af4-9869-ab296cc5ff4f" />
+
+## Настройка Windows Server (AD, DNS, DHCP)
+
 
