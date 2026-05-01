@@ -4,9 +4,9 @@
 
 | Имя VM          | ОС                | Назначение                |
 |----------------|-------------------|---------------------------|
-| Ubuntu Router  | Ubuntu Server 20.04.6| Маршрутизатор, NAT, Relay |
+| Ubuntu Router  | Ubuntu Server 20.04.6| Маршрутизатор |
 | Windows Server | Windows Server 2022| AD, DNS, DHCP             |
-| Windows Desktop| Windows 10/11     | Клиент LAN                |
+| Windows Desktop| Windows 10     | Клиент LAN                |
 | Kali           | Kali Linux        | Клиент KALI               |
 
 
@@ -92,9 +92,10 @@ sudo netfilter-persistent save
 
 **Параметры контролера домена**
 <img width="745" height="552" alt="{15E85170-B6A2-44B5-98F4-3481C953BDC6}" src="https://github.com/user-attachments/assets/6cf1faaf-2395-4ab8-9e3e-3b8ffd59698a" />
-пароль - S!and67S
-пароль - 1Q2w3e4R
-пароль - @Adm!n69s
+
+<br>Пароль режима восстановления каталогов (DSRM) - S!and67S
+<br>Локальный пользователь GoshaServer - 1Q2w3e4R
+<br>Доменный администратор lab\администратор - @Adm!n69s
 
 **Дополнительные параметры**
 <img width="757" height="555" alt="{610159B7-905E-4D09-9DBD-C7840AC7B7AC}" src="https://github.com/user-attachments/assets/373b0a60-5f49-48ea-9d97-db40ddd36105" />
@@ -104,14 +105,18 @@ sudo netfilter-persistent save
 
 ## Настройка DHCP-сервера
 
-В мастере завершения установки DHCP указаны учётные данные `LAB\Administrator` и выполнена авторизация в Active Directory.
+В мастере завершения установки DHCP указаны учётные данные `lab\администратор` и выполнена авторизация в Active Directory.
 
-Использован PowerShell от имени администратора. Поочерёдно созданы три области для подсетей LAN (VMnet1), NET (VMnet2) и KALI (VMnet3).
+**Создание трех областей для подсетей LAN (VMnet1), NET (VMnet2) и KALI (VMnet3)**
 ```powershell
 # LAN
+# Создание области с именем "LAN", диапазон выдаваемых адресов 192.168.47.50 – 192.168.47.150
 Add-DhcpServerv4Scope -Name "LAN" -StartRange 192.168.47.50 -EndRange 192.168.47.150 -SubnetMask 255.255.255.0 -LeaseDuration 8.00:00:00
+# Исключение адрес шлюза (192.168.47.1) из пула выдачи
 Add-DhcpServerv4ExclusionRange -ScopeId 192.168.47.0 -StartRange 192.168.47.1 -EndRange 192.168.47.1
+# Шлюз по умолчанию для клиентов LAN
 Set-DhcpServerv4OptionValue -ScopeId 192.168.47.0 -Router 192.168.47.1
+# DNS сервер
 Set-DhcpServerv4OptionValue -ScopeId 192.168.47.0 -DnsServer 192.168.211.10
 # NET
 Add-DhcpServerv4Scope -Name "NET" -StartRange 192.168.211.50 -EndRange 192.168.211.150 -SubnetMask 255.255.255.0 -LeaseDuration 8.00:00:00
@@ -157,3 +162,55 @@ ipconfig /all
 <img width="288" height="153" alt="{30226D4B-20E7-47D0-9E2B-39F7405F52F0}" src="https://github.com/user-attachments/assets/ad253c48-6795-4e8d-b71f-7ac7b44f6ad3" />
 <img width="526" height="666" alt="{8B5A7B93-F4C3-43E5-B7FE-F41FB24F6263}" src="https://github.com/user-attachments/assets/1e660f65-61d4-4a8c-b1e9-cd8866085c6f" />
 
+## Настройка Ansible на Ubuntu Router
+
+**Установка Ansible и зависимостей**
+
+<br>ansible - система управления конфигурациями. Она позволяет удалённо выполнять команды и разворачивать настройки на Windows Server через протокол WinRM.
+<br>python3-pip, python3-dev, gcc – нужны для сборки модулей Python.
+<br>pywinrm – библиотека для подключения к Windows по WinRM.
+
+**Настройка WinRM на Windows Server**
+```powershell
+# Включение PowerShell Remoting (WinRM)
+Enable-PSRemoting -Force
+# Разрешение на аутентификацию
+Set-Item -Path WSMan:\localhost\Service\Auth\Basic -Value $true
+# Разрешение на незашифрованный обмен
+Set-Item -Path WSMan:\localhost\Service\AllowUnencrypted -Value $true
+# Открытие порта 5985 в брандмауэре
+New-NetFirewallRule -DisplayName "WinRM HTTP" -Direction Inbound -Protocol TCP -LocalPort 5985 -Action Allow
+# Отключение фильтрации токенов для администратора
+Set-ItemProperty -Path "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" -Name "LocalAccountTokenFilterPolicy" -Value 1 -Type DWord
+Restart-Service WinRM
+```
+
+**Создание доменного пользователя для управления**
+
+Т.к пользователь lab\администратор - имеется кириллица, придется создать нового пользователя.
+```powershell
+# Создание пользователя ansible с паролем Pass123!
+$SecurePass = ConvertTo-SecureString "Pass123!" -AsPlainText -Force
+New-ADUser -Name "ansible" -UserPrincipalName "ansible@lab.local" -GivenName "Ansible" -Surname "Admin" -Enabled $true -AccountPassword $SecurePass -PassThru
+# Добавление его в группу администраторов домена
+Add-ADGroupMember -Identity "Администраторы домена" -Members "ansible"
+```
+<img width="703" height="278" alt="{DA3138B7-1D07-4A1F-AFA6-19967F5C3E4E}" src="https://github.com/user-attachments/assets/5306e830-fa17-4518-9935-c89af613b566" />
+
+**Создание инвентарного файла на Ubuntu Router**
+```bash
+mkdir -p ~/ansible-win
+cd ~/ansible-win
+nano inventory.ini
+```
+
+Содержимое inventory.ini:
+<img width="499" height="192" alt="{A1A7308C-AB59-4637-8586-99505E36AE6D}" src="https://github.com/user-attachments/assets/31bad253-bad8-4990-8e0b-b8c9e7c50821" />
+
+<br>ansible_port – порт WinRM по умолчанию 5985 (HTTP).
+<br>ansible_connection=winrm – использование протокола WinRM.
+<br>ansible_winrm_transport=basic – использование базовой аутентификации.
+<br>ansible_winrm_server_cert_validation=ignore – без проверки сертификата
+
+**Проверка подключения**
+<img width="657" height="111" alt="{9C8221BB-CDD5-4C59-A425-68F04A416C88}" src="https://github.com/user-attachments/assets/26f288b4-9729-4cef-b3c2-ed50add2467c" />
