@@ -266,11 +266,11 @@ nano inventory.ini
 
 | Узел | Сеть / интерфейс | IP-адрес | Маска подсети | Шлюз по умолчанию | DNS-сервер |
 |------|------------------|----------|---------------|-------------------|------------|
-| Ubuntu Router | WAN (ens33 / VMnet8) |192.168.86.137 | 255.255.255.0 | через NAT VMware | (по DHCP) |
+| Ubuntu Router | WAN (ens33 / VMnet8) |192.168.86.137 | 255.255.255.0 | через NAT VMware | по DHCP |
 | Ubuntu Router| LAN (ens34 / VMnet1) | 192.168.47.1 | 255.255.255.0 | – | – |
 | Ubuntu Router| NET (ens35 / VMnet2) | 192.168.211.1 | 255.255.255.0 | – | – |
 | Ubuntu Router| KALI (ens36 / VMnet3) | 192.168.203.1| 255.255.255.0` | – | – |
-| Windows Server 2022 | NET (VMnet2) | 192.168.211.10 | 255.255.255.0 | 192.168.211.1 | 127.0.0.1 (self) |
+| Windows Server 2022 | NET (VMnet2) | 192.168.211.10 | 255.255.255.0 | 192.168.211.1 | 127.0.0.1 |
 | Windows 10 Desktop | LAN (VMnet1) | 192.168.47.50 | 255.255.255.0 | 192.168.47.1 | 192.168.211.10 |
 | Kali Linux | KALI (VMnet3) | 192.168.203.50 (DHCP) | 255.255.255.0 | 192.168.203.1 | 192.168.211.10 |
 
@@ -290,7 +290,7 @@ nano inventory.ini
 | Любой клиент LAN, KALI** | Windows Server | DHCP (UDP 67,68) |  Да | |
 | Ubuntu Router | Windows Server | ICMP, WinRM (TCP 5985) |  Да | 
 | Windows Server | Ubuntu Router | ICMP, любые |  Да | 
-| Внешний хост (из NAT/Internet)** | Любой внутренний узел | Любой |  Нет |
+| Внешний хост (из NAT/Internet) | Любой внутренний узел | Любой |  Нет |
 
 ---
 
@@ -300,5 +300,5 @@ nano inventory.ini
 |--------|------|----------------|----------------------|------------|
 | DNS | Windows Server (NET) | UDP/TCP 53 |  Для всех клиентов | Преобразует доменные имена в IP‑адреса |
 | DHCP | Windows Server (NET) | UDP 67,68 |  Для всех клиентов | Через DHCP Relay для LAN и KALI; в NET – напрямую |
-| Active Directory | Windows Server (NET) | LDAP (389), Kerberos (88), SMB (445) |  Для доменных клиентов | Только после ввода клиента в домен `lab.local` |
+| Active Directory | Windows Server (NET) | LDAP (389), Kerberos (88), SMB (445) |  Для доменных клиентов | Только после ввода клиента в домен lab.local |
 | WinRM (HTTP) | Windows Server (NET) | TCP 5985 |  С Ubuntu Router (Ansible) | Базовая аутентификация |
