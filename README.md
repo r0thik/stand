@@ -214,3 +214,50 @@ nano inventory.ini
 
 **Проверка подключения**
 <img width="657" height="111" alt="{9C8221BB-CDD5-4C59-A425-68F04A416C88}" src="https://github.com/user-attachments/assets/26f288b4-9729-4cef-b3c2-ed50add2467c" />
+
+**Playbook для настройки DHCP-областей на Windows Server**
+```
+---
+- name: Настройка DHCP-областей
+  hosts: windows_server
+  gather_facts: no
+
+  tasks:
+    - name: Создание DHCP-области LAN, NET, KALI
+      win_shell: |
+        # LAN
+        Add-DhcpServerv4Scope -Name "LAN" -StartRange 192.168.47.50 -EndRange 192.168.47.150 -SubnetMask 255.255.255.0 -LeaseDuration 8.00:00:00 -ErrorAction SilentlyContinue
+        Add-DhcpServerv4ExclusionRange -ScopeId 192.168.47.0 -StartRange 192.168.47.1 -EndRange 192.168.47.1 -ErrorAction SilentlyContinue
+        Set-DhcpServerv4OptionValue -ScopeId 192.168.47.0 -Router 192.168.47.1 -ErrorAction SilentlyContinue
+        Set-DhcpServerv4OptionValue -ScopeId 192.168.47.0 -DnsServer 192.168.211.10 -ErrorAction SilentlyContinue
+
+        # NET
+        Add-DhcpServerv4Scope -Name "NET" -StartRange 192.168.211.50 -EndRange 192.168.211.150 -SubnetMask 255.255.255.0 -LeaseDuration 8.00:00:00 -ErrorAction SilentlyContinue
+        Add-DhcpServerv4ExclusionRange -ScopeId 192.168.211.0 -StartRange 192.168.211.1 -EndRange 192.168.211.1 -ErrorAction SilentlyContinue
+        Add-DhcpServerv4ExclusionRange -ScopeId 192.168.211.0 -StartRange 192.168.211.10 -EndRange 192.168.211.10 -ErrorAction SilentlyContinue
+        Set-DhcpServerv4OptionValue -ScopeId 192.168.211.0 -Router 192.168.211.1 -ErrorAction SilentlyContinue
+        Set-DhcpServerv4OptionValue -ScopeId 192.168.211.0 -DnsServer 192.168.211.10 -ErrorAction SilentlyContinue
+
+        # KALI
+        Add-DhcpServerv4Scope -Name "KALI" -StartRange 192.168.203.50 -EndRange 192.168.203.150 -SubnetMask 255.255.255.0 -LeaseDuration 8.00:00:00 -ErrorAction SilentlyContinue
+        Add-DhcpServerv4ExclusionRange -ScopeId 192.168.203.0 -StartRange 192.168.203.1 -EndRange 192.168.203.1 -ErrorAction SilentlyContinue
+        Set-DhcpServerv4OptionValue -ScopeId 192.168.203.0 -Router 192.168.203.1 -ErrorAction SilentlyContinue
+        Set-DhcpServerv4OptionValue -ScopeId 192.168.203.0 -DnsServer 192.168.211.10 -ErrorAction SilentlyContinue
+      register: dhcp_result
+
+    - name: Содержмиое вывода
+      debug:
+        var: dhcp_result.stdout_lines
+
+    - name: Ошибки
+      debug:
+        var: dhcp_result.stderr_lines
+      when: dhcp_result.stderr != ""
+```
+
+<img width="679" height="231" alt="{2EF44687-6222-43B3-9BCC-83E7E06D53A9}" src="https://github.com/user-attachments/assets/ec8dd38d-cbc2-431c-9caf-9d1aba724dfd" />
+<img width="1066" height="759" alt="{C6CA800E-89A4-4FB0-A650-F92114F43957}" src="https://github.com/user-attachments/assets/4501d060-746e-44ff-9278-415ab69a27c6" />
+<img width="1050" height="404" alt="{0365406E-C045-404D-A38F-570D38C43D7C}" src="https://github.com/user-attachments/assets/1b4a0f90-1de6-4524-a961-b321185a97a3" />
+
+**Ошибки в выводе — так как области уже существуют**
+
