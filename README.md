@@ -67,7 +67,7 @@ sudo netfilter-persistent save
 <img width="642" height="245" alt="{BCE83820-90CC-4697-9ACC-A5DDF590E757}" src="https://github.com/user-attachments/assets/478cbe41-eeeb-4c97-819f-7347cab38ed7" />
 
 ## Настройка Windows Server (AD, DNS, DHCP)
-
+На Windows Server вручную заданы следующие параметры:
 <img width="409" height="455" alt="{BFCEFB8C-771A-417C-A46E-BF8F2A429325}" src="https://github.com/user-attachments/assets/91aef4c0-bbe4-4111-9fe1-e86023ac6358" />
 
 **Добавить роль и компоненты**
@@ -99,5 +99,35 @@ sudo netfilter-persistent save
 
 **Пути**
 <img width="754" height="551" alt="{536A2054-D8B3-4F36-AA76-2ECBA92409C6}" src="https://github.com/user-attachments/assets/9d62e02a-9606-452a-9674-bcb60e03ac42" />
+
+## Настройка DHCP-сервера
+
+В мастере завершения установки DHCP указаны учётные данные `LAB\Administrator` и выполнена авторизация в Active Directory.
+
+Использован PowerShell от имени администратора. Поочерёдно созданы три области для подсетей LAN (VMnet1), NET (VMnet2) и KALI (VMnet3).
+```powershell
+# LAN
+Add-DhcpServerv4Scope -Name "LAN" -StartRange 192.168.47.50 -EndRange 192.168.47.150 -SubnetMask 255.255.255.0 -LeaseDuration 8.00:00:00
+Add-DhcpServerv4ExclusionRange -ScopeId 192.168.47.0 -StartRange 192.168.47.1 -EndRange 192.168.47.1
+Set-DhcpServerv4OptionValue -ScopeId 192.168.47.0 -Router 192.168.47.1
+Set-DhcpServerv4OptionValue -ScopeId 192.168.47.0 -DnsServer 192.168.211.10
+# NET
+Add-DhcpServerv4Scope -Name "NET" -StartRange 192.168.211.50 -EndRange 192.168.211.150 -SubnetMask 255.255.255.0 -LeaseDuration 8.00:00:00
+Add-DhcpServerv4ExclusionRange -ScopeId 192.168.211.0 -StartRange 192.168.211.1 -EndRange 192.168.211.1
+Add-DhcpServerv4ExclusionRange -ScopeId 192.168.211.0 -StartRange 192.168.211.10 -EndRange 192.168.211.10
+Set-DhcpServerv4OptionValue -ScopeId 192.168.211.0 -Router 192.168.211.1
+Set-DhcpServerv4OptionValue -ScopeId 192.168.211.0 -DnsServer 192.168.211.10
+# KALI
+Add-DhcpServerv4Scope -Name "KALI" -StartRange 192.168.203.50 -EndRange 192.168.203.150 -SubnetMask 255.255.255.0 -LeaseDuration 8.00:00:00
+Add-DhcpServerv4ExclusionRange -ScopeId 192.168.203.0 -StartRange 192.168.203.1 -EndRange 192.168.203.1
+Set-DhcpServerv4OptionValue -ScopeId 192.168.203.0 -Router 192.168.203.1
+Set-DhcpServerv4OptionValue -ScopeId 192.168.203.0 -DnsServer 192.168.211.10
+```
+## Проверка областей
+**Команда Get-DhcpServerv4Scope вывела:**
+<img width="831" height="139" alt="{8FFE9B1F-2D48-488B-BC0D-BE5798822064}" src="https://github.com/user-attachments/assets/e4cc5b2e-95b4-494a-81af-c69b4132e627" />
+
+**Авторизация DHCP-сервера в AD**
+<img width="927" height="60" alt="{8708AC5B-4C89-4551-8822-4923D9784B73}" src="https://github.com/user-attachments/assets/3e3c67b1-ee1f-4cbd-a801-c6ca7fba656b" />
 
 
