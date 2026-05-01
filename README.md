@@ -67,6 +67,7 @@ sudo netfilter-persistent save
 <img width="642" height="245" alt="{BCE83820-90CC-4697-9ACC-A5DDF590E757}" src="https://github.com/user-attachments/assets/478cbe41-eeeb-4c97-819f-7347cab38ed7" />
 
 ## Настройка Windows Server (AD, DNS, DHCP)
+
 На Windows Server вручную заданы следующие параметры:
 <img width="409" height="455" alt="{BFCEFB8C-771A-417C-A46E-BF8F2A429325}" src="https://github.com/user-attachments/assets/91aef4c0-bbe4-4111-9fe1-e86023ac6358" />
 
@@ -94,6 +95,7 @@ sudo netfilter-persistent save
 пароль - S!and67S
 пароль - 1Q2w3e4R
 пароль - @Adm!n69s
+
 **Дополнительные параметры**
 <img width="757" height="555" alt="{610159B7-905E-4D09-9DBD-C7840AC7B7AC}" src="https://github.com/user-attachments/assets/373b0a60-5f49-48ea-9d97-db40ddd36105" />
 
@@ -127,7 +129,31 @@ Set-DhcpServerv4OptionValue -ScopeId 192.168.203.0 -DnsServer 192.168.211.10
 **Команда Get-DhcpServerv4Scope вывела:**
 <img width="831" height="139" alt="{8FFE9B1F-2D48-488B-BC0D-BE5798822064}" src="https://github.com/user-attachments/assets/e4cc5b2e-95b4-494a-81af-c69b4132e627" />
 
+
 **Авторизация DHCP-сервера в AD**
 <img width="927" height="60" alt="{8708AC5B-4C89-4551-8822-4923D9784B73}" src="https://github.com/user-attachments/assets/3e3c67b1-ee1f-4cbd-a801-c6ca7fba656b" />
 
+## Настройка DHCP Relay
+
+**Файл `/etc/default/isc-dhcp-relay`:**
+<img width="626" height="285" alt="{A712BC37-11E4-45CB-AF8A-4AD4238D0394}" src="https://github.com/user-attachments/assets/be12dd80-e604-4f0e-957b-f6333d46a6ee" />
+**Примечание:** Интерфейс `ens35` (NET) добавлен, чтобы relay мог получить ответы от DHCP-сервера и переслать их клиентам в другие подсети.
+
+## Проверка DHCP сервисов
+**Windows Desktop (VMnet1, LAN)**
+```cmd
+ipconfig /release
+ipconfig /renew
+ipconfig /all
+```
+<img width="682" height="847" alt="{AE149762-FF9D-48C0-88FE-FF417A0003E6}" src="https://github.com/user-attachments/assets/9957b851-6f2a-42c4-83ae-a41b642cb7f0" />
+
+**Kali Linux (VMnet3, KALI)**
+<img width="834" height="553" alt="{68038AC3-B6E6-4FC5-AF19-E3FA8827F206}" src="https://github.com/user-attachments/assets/c11afe7b-c5a6-4c53-bc47-eb475ec9dba7" />
+
+## Ввод Windows Desktop в домен
+
+<img width="427" height="484" alt="{7FEE9DAE-9A8B-4E3E-A66B-E181D0C4E7CF}" src="https://github.com/user-attachments/assets/e46e4f1c-3c72-496b-8823-d99e01213894" />
+<img width="288" height="153" alt="{30226D4B-20E7-47D0-9E2B-39F7405F52F0}" src="https://github.com/user-attachments/assets/ad253c48-6795-4e8d-b71f-7ac7b44f6ad3" />
+<img width="526" height="666" alt="{8B5A7B93-F4C3-43E5-B7FE-F41FB24F6263}" src="https://github.com/user-attachments/assets/1e660f65-61d4-4a8c-b1e9-cd8866085c6f" />
 
