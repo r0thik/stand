@@ -1,73 +1,94 @@
-# Настройка стенда
-Виртуальные сети
-VMnet1 (Host-only) — подсеть 192.168.47.0/24, DHCP отключён. Будет использоваться как сеть LAN для Windows Desktop.
-VMnet2 (Host-only) — подсеть 192.168.211.0/24, DHCP отключён. Будет использоваться как сеть NET для Windows Server (AD+DNS+DHCP).
-VMnet8 (NAT) — подсеть 192.168.86.0/24, DHCP включён. Будет использоваться как внешняя сеть (WAN) для Ubuntu-роутера (доступ в интернет).
-<img width="278" height="85" alt="{9929E741-9420-4FE3-B3E2-32002D6F469F}" src="https://github.com/user-attachments/assets/d996020a-4cb8-45f1-8054-6f838bb7ef41" />
+## Подготовка виртуальных машин
+
+Созданы 4 ВМ в VMware Workstation:
+
+| Имя VM          | ОС                | Назначение                |
+|----------------|-------------------|---------------------------|
+| Ubuntu Router  | Ubuntu Server 20.04.6| Маршрутизатор, NAT, Relay |
+| Windows Server | Windows Server 2022| AD, DNS, DHCP             |
+| Windows Desktop| Windows 10/11     | Клиент LAN                |
+| Kali           | Kali Linux        | Клиент KALI               |
 
 
-Сетевые адаптеры в роутере
-ip a
-<img width="830" height="639" alt="{E222F153-709C-4B56-8208-135AB53BB9CC}" src="https://github.com/user-attachments/assets/1edc514e-a0b3-4aba-a737-b50e718e2db8" />
-Содержимое /etc/netplan/01-network-manager-all.yaml
-<img width="264" height="324" alt="{FA4CF96E-5534-4F3C-AD82-B97E6B2F3B24}" src="https://github.com/user-attachments/assets/6444a13d-cd8c-41e3-b9e9-c6617665cece" />
-Включение IP-форвардинга и NAT
+## Создание виртуальных сетей в VMware
+
+В Virtual Network Editor созданы три Host-only сети с отключённым DHCP:
+
+<img width="553" height="134" alt="{949BE416-43CC-42FA-A074-80ECA944E7A9}" src="https://github.com/user-attachments/assets/7547689f-fc2d-4835-a481-804dd0ee36ed" />
+
+VMnet8 (NAT) оставлен для выхода в интернет.
+
+## Настройка сетевых адаптеров Ubuntu Router
+
+В настройках ВМ «Ubuntu Router» добавлены адаптеры:
+
+<img width="344" height="490" alt="{6F2F4FF1-8B8F-4E3B-BEE2-CD350EEC6A40}" src="https://github.com/user-attachments/assets/679c73e3-6bc9-4d43-8feb-73624824b7fe" />
+
+## Назначение статических IP на Ubuntu Router
+
+**Файл `/etc/netplan/00-installer-config.yaml`:**
+
+<img width="247" height="296" alt="{51D83B45-481E-4549-BC98-D547E9A35C15}" src="https://github.com/user-attachments/assets/df69d193-bc24-43e6-af9b-23559bb9ce6f" />
+
+Результат sudo netplan apply и ip a:
+
+<img width="841" height="539" alt="{E4B85C75-E42A-44FD-85E6-5E5133DAC686}" src="https://github.com/user-attachments/assets/a5e40dcd-8bf5-4d6b-bc23-c7cc21ffee08" />
+
+
+## Включение IP forwarding и NAT
+
+**Выполненные команды:**
+
+```bash
+# Включение форвардинга
+sudo sysctl -w net.ipv4.ip_forward=1
 echo "net.ipv4.ip_forward=1" | sudo tee -a /etc/sysctl.conf
-sudo sysctl -p
-<img width="300" height="39" alt="{66AAA1BA-C1AE-48E4-9E05-0E51F4D1D379}" src="https://github.com/user-attachments/assets/0c31e834-23a9-4c95-9f58-e0e6f2ee72ef" />
 
-sudo iptables -t nat -A POSTROUTING -o ens33 -j MASQUERADE
-sudo iptables -A FORWARD -i ens37 -o ens33 -j ACCEPT
-sudo iptables -A FORWARD -i ens38 -o ens33 -j ACCEPT
-sudo iptables -A FORWARD -i ens33 -o ens37 -j ACCEPT
-sudo iptables -A FORWARD -i ens33 -o ens38 -j ACCEPT
+# NAT для внутренних сетей
+sudo iptables -t nat -A POSTROUTING -s 192.168.47.0/24 -o ens33 -j MASQUERADE
+sudo iptables -t nat -A POSTROUTING -s 192.168.211.0/24 -o ens33 -j MASQUERADE
 sudo iptables -t nat -A POSTROUTING -s 192.168.203.0/24 -o ens33 -j MASQUERADE
 
-<img width="659" height="280" alt="{E4E638AB-486F-4439-A65F-EA66F0475E88}" src="https://github.com/user-attachments/assets/e7c92519-ac19-49d6-b5ac-013ed25ed9ec" />
+# Разрешение пересылки между интерфейсами
+sudo iptables -A FORWARD -i ens34 -o ens33 -j ACCEPT
+sudo iptables -A FORWARD -i ens35 -o ens33 -j ACCEPT
+sudo iptables -A FORWARD -i ens36 -o ens33 -j ACCEPT
+sudo iptables -A FORWARD -i ens33 -o ens34 -j ACCEPT
+sudo iptables -A FORWARD -i ens33 -o ens35 -j ACCEPT
+sudo iptables -A FORWARD -i ens33 -o ens36 -j ACCEPT
 
-
-sudo iptables -A FORWARD -i ens37 -o ens33 -j ACCEPT
-sudo iptables -A FORWARD -i ens38 -o ens33 -j ACCEPT
-sudo iptables -A FORWARD -i ens33 -o ens37 -j ACCEPT
-sudo iptables -A FORWARD -i ens33 -o ens38 -j ACCEPT
-sudo iptables -A FORWARD -i ens39 -o ens33 -j ACCEPT
-sudo iptables -A FORWARD -i ens33 -o ens39 -j ACCEPT
-<img width="650" height="282" alt="{38F8DAEA-B035-45A7-BFE3-0E3A05226128}" src="https://github.com/user-attachments/assets/f28cb9d5-dc27-44bb-a96f-2495411317de" />
-
+# Установка и сохранение правил
+sudo apt install iptables-persistent -y
 sudo netfilter-persistent save
-
-## Настройка DHCP
-
-# LAN (VMnet1) Windows Desktop
-interface=ens37
-dhcp-range=ens37,192.168.47.50,192.168.47.150,12h
-dhcp-option=ens37,3,192.168.47.1
-dhcp-option=ens37,6,8.8.8.8
-
-# NET (VMnet2) Windows Server
-interface=ens38
-dhcp-range=ens38,192.168.211.50,192.168.211.150,12h
-dhcp-option=ens38,3,192.168.211.1
-dhcp-option=ens38,6,8.8.8.8
-
-# KALI (VMnet3)
-interface=ens39
-dhcp-range=ens39,192.168.203.50,192.168.203.150,12h
-dhcp-option=ens39,3,192.168.203.1
-dhcp-option=ens39,6,8.8.8.8
-
-# Не прослушивать другие интерфейсы
-bind-interfaces
-
-<img width="448" height="409" alt="{EF67F7F5-FF28-4F8B-9908-7B184FEB76E6}" src="https://github.com/user-attachments/assets/f04c97b3-5702-43f5-85af-8352ee7a187c" />
-
-
-## Переключение Windows в их сети
-Проверка Windows Server
-<img width="571" height="764" alt="{F3A75DD8-6220-4256-A423-7AEB0E30AD6B}" src="https://github.com/user-attachments/assets/4495625d-fef2-4a34-92ec-0c2bdf07d1af" />
-Проверка Windows Dekstop
-<img width="612" height="736" alt="{7CBD1476-38B4-4A20-9510-6839C041808F}" src="https://github.com/user-attachments/assets/dcb84acf-d18b-4af4-9869-ab296cc5ff4f" />
+```
+**Вывод iptables -L -n -v:**
+<img width="649" height="245" alt="{CA8EA756-01F3-4295-A7CA-E2D1D9CDD798}" src="https://github.com/user-attachments/assets/45f0aa29-b624-4a59-a709-1394a68ec93f" />
+**Вывод iptables -t nat -L -n -v:**
+<img width="642" height="245" alt="{BCE83820-90CC-4697-9ACC-A5DDF590E757}" src="https://github.com/user-attachments/assets/478cbe41-eeeb-4c97-819f-7347cab38ed7" />
 
 ## Настройка Windows Server (AD, DNS, DHCP)
 
+<img width="409" height="455" alt="{BFCEFB8C-771A-417C-A46E-BF8F2A429325}" src="https://github.com/user-attachments/assets/91aef4c0-bbe4-4111-9fe1-e86023ac6358" />
+
+**Добавить роль и компоненты**
+<img width="1157" height="258" alt="image" src="https://github.com/user-attachments/assets/02151f49-d894-41f2-b777-1531d8d151d2" />
+
+**Тип установки**
+<img width="777" height="282" alt="image" src="https://github.com/user-attachments/assets/4baeb105-ab68-40ff-adc8-3b562af22a58" />
+
+**Выбор сервера**
+<img width="765" height="295" alt="image" src="https://github.com/user-attachments/assets/a42c6ad6-ec53-4a04-8f42-829baba4d028" />
+
+**Роли сервера**
+<img width="921" height="628" alt="{8C4ED401-2331-4062-A10A-A55B405E37CC}" src="https://github.com/user-attachments/assets/a6e8503f-4699-4fcd-934b-46a60f88142b" />
+
+**Ход установки**
+<img width="676" height="497" alt="{6F248A76-D49D-4E8F-B277-CCAEDDCA515F}" src="https://github.com/user-attachments/assets/dcffe9f3-216d-4e32-9398-c78e05099ab3" />
+
+## Повышение до контроллера домена
+**Конфигурация развертывания**
+<img width="755" height="558" alt="{BA2E0763-A6AE-44CF-96A0-41F3BACC424E}" src="https://github.com/user-attachments/assets/49ae8746-0a6d-4f03-98fd-bb7f7c4875e4" />
+
+**Параметры контролера домена**
+<img width="745" height="552" alt="{15E85170-B6A2-44B5-98F4-3481C953BDC6}" src="https://github.com/user-attachments/assets/6cf1faaf-2395-4ab8-9e3e-3b8ffd59698a" />
 
