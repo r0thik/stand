@@ -91,4 +91,13 @@ sudo netfilter-persistent save
 
 **Параметры контролера домена**
 <img width="745" height="552" alt="{15E85170-B6A2-44B5-98F4-3481C953BDC6}" src="https://github.com/user-attachments/assets/6cf1faaf-2395-4ab8-9e3e-3b8ffd59698a" />
+пароль - S!and67S
+пароль - 1Q2w3e4R
+пароль - @Adm!n69s
+**Дополнительные параметры**
+<img width="757" height="555" alt="{610159B7-905E-4D09-9DBD-C7840AC7B7AC}" src="https://github.com/user-attachments/assets/373b0a60-5f49-48ea-9d97-db40ddd36105" />
+
+**Пути**
+<img width="754" height="551" alt="{536A2054-D8B3-4F36-AA76-2ECBA92409C6}" src="https://github.com/user-attachments/assets/9d62e02a-9606-452a-9674-bcb60e03ac42" />
+
 
